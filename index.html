@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <title>MWDTS</title>
+
+  <!-- This is a REAL, top-level <head> in a page this app fully
+       controls -- unlike the Streamlit Cloud page itself, nothing here
+       is injected after the fact via markdown or JavaScript, so there
+       is no ambiguity about whether the browser's install-prompt logic
+       can find it. This file exists specifically because that
+       injection approach hit a documented, currently-unresolved
+       limitation of Streamlit Community Cloud's own template -- see
+       the forum threads linked in WRAPPER_SITE_README.md. -->
+  <link rel="manifest" href="manifest.json">
+  <link rel="icon" type="image/png" href="icon-192.png">
+  <link rel="apple-touch-icon" href="icon-192.png">
+  <meta name="theme-color" content="#001530">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="MWDTS">
+  <meta name="mobile-web-app-capable" content="yes">
+
+  <style>
+    html, body {
+      margin: 0; padding: 0; height: 100%; width: 100%;
+      overflow: hidden; background: #eef1f6;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+    }
+    #app-frame {
+      position: fixed; top: 0; left: 0;
+      width: 100%; height: 100%;
+      border: none; display: block;
+    }
+    /* Loading state, shown until the real app finishes loading inside
+       the iframe -- a bare blank screen during that gap looks broken,
+       even though nothing actually is. */
+    #loading {
+      position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+      background: #001530; color: #ffffff; z-index: 10;
+      transition: opacity 0.3s ease;
+    }
+    #loading img { width: 84px; height: 84px; margin-bottom: 18px; border-radius: 18px; }
+    #loading .title { font-size: 20px; font-weight: 700; letter-spacing: 0.02em; }
+    #loading .sub { font-size: 13px; color: #b9c901; margin-top: 8px; }
+    #loading.hidden { opacity: 0; pointer-events: none; }
+  </style>
+</head>
+<body>
+
+  <div id="loading">
+    <img src="icon-192.png" alt="MWDTS">
+    <div class="title">MWDTS</div>
+    <div class="sub">Loading&hellip;</div>
+  </div>
+
+  <!-- embed=true is Streamlit Community Cloud's own documented
+       parameter for this exact purpose: it strips their toolbar,
+       footer, top padding, and colored top line, so the app fills
+       this frame cleanly instead of showing Streamlit's own chrome
+       inside a chrome-less wrapper. -->
+  <iframe
+    id="app-frame"
+    src="https://mine-task-tracker-ljc2ppwmwiwtfqwykn2by5.streamlit.app/?embed=true"
+    title="Mine & Workshop Digital Tracker System"
+    allow="clipboard-write; camera; geolocation"
+  ></iframe>
+
+  <script>
+    // Hide the loading screen once the iframe reports it has loaded.
+    // This fires on the iframe's own load event, not on the Streamlit
+    // app finishing its own internal render -- close enough for a
+    // loading-state purpose, and avoids needing any cross-origin
+    // messaging the two pages haven't agreed on.
+    document.getElementById('app-frame').addEventListener('load', function () {
+      document.getElementById('loading').classList.add('hidden');
+    });
+
+    // Same deliberately-minimal philosophy as the in-app service
+    // worker: only the shell (this page's own static assets) is ever
+    // cached, never the app's own content -- and since the iframe
+    // points at a different origin (Streamlit Cloud's domain, not
+    // this wrapper site's), a service worker here could not intercept
+    // or cache that cross-origin content even if it tried to, by the
+    // browser's own same-origin policy.
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('sw.js').catch(function () {});
+    }
+  </script>
+</body>
+</html>
