@@ -42,3 +42,37 @@ self.addEventListener("fetch", (event) => {
     fetch(event.request).catch(() => caches.match(event.request))
   );
 });
+
+// Push notifications — this wrapper site is the one hosting a
+// genuinely working service worker for this purpose. Streamlit
+// Community Cloud's static file serving sends .js files with
+// Content-Type: text/plain (documented, not a misconfiguration —
+// only images/fonts/.pdf/.xml/.json get served with a proper type),
+// and a Service Worker registration requires an actual JavaScript
+// content type. GitHub Pages doesn't have that restriction, which is
+// exactly why this lives here instead of the Streamlit app itself.
+self.addEventListener("push", (event) => {
+  let payload = { title: "MWDTS", body: "You have a new notification." };
+  try {
+    if (event.data) payload = event.data.json();
+  } catch (e) {}
+  event.waitUntil(
+    self.registration.showNotification(payload.title || "MWDTS", {
+      body: payload.body || "",
+      icon: "./icon-192.png",
+      badge: "./icon-192.png",
+    })
+  );
+});
+
+self.addEventListener("notificationclick", (event) => {
+  event.notification.close();
+  event.waitUntil(
+    self.clients.matchAll({ type: "window" }).then((clientList) => {
+      for (const client of clientList) {
+        if ("focus" in client) return client.focus();
+      }
+      if (self.clients.openWindow) return self.clients.openWindow("./");
+    })
+  );
+});
