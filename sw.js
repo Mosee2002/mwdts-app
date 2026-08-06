@@ -11,7 +11,7 @@ const SHELL_CACHE = "mwdts-wrapper-shell-v1";
 const SHELL_ASSETS = [
   "./index.html",
   "./manifest.json",
-  "./icon-192.png",
+  "./icon.png",
 ];
 
 self.addEventListener("install", (event) => {
@@ -59,8 +59,8 @@ self.addEventListener("push", (event) => {
   event.waitUntil(
     self.registration.showNotification(payload.title || "MWDTS", {
       body: payload.body || "",
-      icon: "./icon-192.png",
-      badge: "./icon-192.png",
+      icon: "./icon.png",
+      badge: "./icon.png",
     })
   );
 });
