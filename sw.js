@@ -43,28 +43,29 @@ self.addEventListener("fetch", (event) => {
   );
 });
 
-// Push notifications — this wrapper site is the one hosting a
-// genuinely working service worker for this purpose. Streamlit
-// Community Cloud's static file serving sends .js files with
-// Content-Type: text/plain (documented, not a misconfiguration —
-// only images/fonts/.pdf/.xml/.json get served with a proper type),
-// and a Service Worker registration requires an actual JavaScript
-// content type. GitHub Pages doesn't have that restriction, which is
-// exactly why this lives here instead of the Streamlit app itself.
+// Without this listener, an incoming push is delivered to the service
+// worker but nothing displays it — the browser just silently drops it.
+// This was missing entirely, so no push has ever produced a visible
+// notification even on a successful subscription.
 self.addEventListener("push", (event) => {
-  let payload = { title: "MWDTS", body: "You have a new notification." };
+  let data = { title: "MWDTS", body: "You have a new notification." };
   try {
-    if (event.data) payload = event.data.json();
-  } catch (e) {}
+    if (event.data) data = event.data.json();
+  } catch (e) {
+    // Fall back to the default above if the payload isn't valid JSON.
+  }
+
   event.waitUntil(
-    self.registration.showNotification(payload.title || "MWDTS", {
-      body: payload.body || "",
+    self.registration.showNotification(data.title || "MWDTS", {
+      body: data.body || "",
       icon: "./icon-192.png",
       badge: "./icon-192.png",
     })
   );
 });
 
+// Clicking the notification should bring the app to the front rather
+// than leave it sitting in the notification tray with no action.
 self.addEventListener("notificationclick", (event) => {
   event.notification.close();
   event.waitUntil(
@@ -72,8 +73,7 @@ self.addEventListener("notificationclick", (event) => {
       for (const client of clientList) {
         if ("focus" in client) return client.focus();
       }
-      if (self.clients.openWindow) return self.clients.openWindow("./");
+      if (self.clients.openWindow) return self.clients.openWindow("./index.html");
     })
   );
 });
-  
